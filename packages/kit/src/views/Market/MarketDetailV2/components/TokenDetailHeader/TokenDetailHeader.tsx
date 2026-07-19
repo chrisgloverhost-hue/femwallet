@@ -1,0 +1,157 @@
+import type { ComponentProps } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+
+import {
+  GradientMask,
+  ScrollView,
+  Stack,
+  XStack,
+  useMedia,
+} from '@onekeyhq/components';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
+import networkUtils from '@onekeyhq/shared/src/utils/networkUtils';
+
+import { useMarketDetailHeaderDisplayData } from '../../hooks/useMarketDetailDisplayData';
+
+import { ShareButton } from './ShareButton';
+import { TokenDetailHeaderLeft } from './TokenDetailHeaderLeft';
+import { TokenDetailHeaderRight } from './TokenDetailHeaderRight';
+
+import type {
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
+
+const SCROLL_THRESHOLD = 2;
+
+export function TokenDetailHeader({
+  showStats = true,
+  showMediaAndSecurity = true,
+  showFavoriteButton = true,
+  containerProps,
+}: {
+  showStats?: boolean;
+  showMediaAndSecurity?: boolean;
+  showFavoriteButton?: boolean;
+  containerProps?: ComponentProps<typeof XStack>;
+}) {
+  const { lg, md } = useMedia();
+  const {
+    tokenDetail,
+    networkId,
+    isNative,
+    isPreviewTokenDetail,
+    isStockToken,
+  } = useMarketDetailHeaderDisplayData();
+  const [scrollX, setScrollX] = useState(0);
+  const [scrollViewWidth, setScrollViewWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+
+  const networkData = useMemo(() => {
+    return networkId ? networkUtils.getLocalNetworkInfo(networkId) : undefined;
+  }, [networkId]);
+
+  const shouldShowRightGradient = useMemo(() => {
+    return (
+      contentWidth > scrollViewWidth &&
+      scrollX < contentWidth - scrollViewWidth - SCROLL_THRESHOLD
+    );
+  }, [contentWidth, scrollViewWidth, scrollX]);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      setScrollX(event.nativeEvent.contentOffset.x);
+    },
+    [],
+  );
+
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    setScrollViewWidth(event.nativeEvent.layout.width);
+  }, []);
+
+  const handleContentSizeChange = useCallback((width: number) => {
+    setContentWidth(width);
+  }, []);
+
+  const renderHeaderContent = () => (
+    <XStack
+      position="relative"
+      width={lg ? '90%' : '100%'}
+      px="$5"
+      py="$4"
+      h={54}
+      jc="flex-start"
+      ai="center"
+      gap="$6"
+      {...containerProps}
+    >
+      <TokenDetailHeaderLeft
+        tokenDetail={tokenDetail}
+        networkId={networkId}
+        networkLogoUri={networkData?.logoURI}
+        showMediaAndSecurity={showMediaAndSecurity}
+        isNative={isNative}
+        showFavoriteButton={showFavoriteButton}
+      />
+
+      {showStats === false && platformEnv.isNative && md ? null : (
+        <TokenDetailHeaderRight
+          tokenDetail={tokenDetail}
+          networkId={networkId}
+          isNative={isNative}
+          showStats={showStats}
+          isPreviewTokenDetail={isPreviewTokenDetail}
+          isStockToken={isStockToken}
+        />
+      )}
+
+      {/* Share button pushed to the right on desktop */}
+      {!platformEnv.isNative && !md && networkId && isNative ? (
+        <>
+          <Stack flex={1} />
+          <ShareButton
+            networkId={networkId}
+            address={tokenDetail?.address ?? ''}
+            isNative={isNative}
+            useIconButton
+          />
+        </>
+      ) : null}
+    </XStack>
+  );
+
+  return (
+    <XStack
+      position="relative"
+      borderBottomWidth="$px"
+      borderBottomColor="$borderSubdued"
+    >
+      {!platformEnv.isNative && !md ? (
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            onLayout={handleLayout}
+            onContentSizeChange={handleContentSizeChange}
+          >
+            {renderHeaderContent()}
+          </ScrollView>
+
+          <GradientMask
+            opacity={scrollX > SCROLL_THRESHOLD ? 1 : 0}
+            position="left"
+          />
+          <GradientMask
+            opacity={shouldShowRightGradient ? 1 : 0}
+            position="right"
+          />
+        </>
+      ) : (
+        renderHeaderContent()
+      )}
+    </XStack>
+  );
+}

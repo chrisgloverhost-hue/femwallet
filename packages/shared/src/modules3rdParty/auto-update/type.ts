@@ -1,0 +1,176 @@
+import type { IDesktopEventUnSubscribe } from '@onekeyhq/desktop/app/preload';
+import type { IUpdateProgressUpdate } from '@onekeyhq/kit-bg/src/desktopApis/DesktopApiAppUpdate';
+
+import type { IAppUpdateInfo } from '../../appUpdate';
+
+export interface IDownloadPackageParams {
+  downloadUrl?: string;
+  latestVersion?: string;
+  bundleVersion?: string;
+  fileSize?: number;
+  sha256?: string;
+  signature?: string;
+  downloadedFile?: string;
+  headers?: Record<string, string>;
+  targetVersion?: string;
+  /** Desktop only: effective only when ONEKEY_ALLOW_SKIP_GPG_VERIFICATION is enabled */
+  skipGPGVerification?: boolean;
+}
+
+export type IUpdateDownloadedEvent =
+  | (IDownloadPackageParams & {
+      downloadedFile?: string;
+      signature?: string;
+    })
+  | undefined;
+
+export type IDownloadPackage = (
+  params: IDownloadPackageParams,
+) => Promise<IUpdateDownloadedEvent | null>;
+
+export type IInstallPackage = (params: IAppUpdateInfo) => Promise<void>;
+
+export type IDownloadASC = (params: IUpdateDownloadedEvent) => Promise<void>;
+
+export type IVerifyASC = (params: IUpdateDownloadedEvent) => Promise<void>;
+
+export type IVerifyPackage = (params: IUpdateDownloadedEvent) => Promise<void>;
+
+export type IUseDownloadProgress = () => number;
+
+export type IClearPackage = () => Promise<void>;
+
+export type IManualInstallPackage = (
+  params: IUpdateDownloadedEvent & { buildNumber: string },
+) => Promise<void>;
+
+export interface IAppUpdate {
+  downloadPackage: IDownloadPackage;
+  verifyPackage: IVerifyPackage;
+  verifyASC: IVerifyASC;
+  downloadASC: IDownloadASC;
+  installPackage: IInstallPackage;
+  manualInstallPackage: IManualInstallPackage;
+  clearPackage: IClearPackage;
+  /**
+   * Android only: wipe the standalone APK cache (cacheDir/apks). iOS /
+   * desktop / web are no-op stubs that resolve immediately. Callers must
+   * gate this on the app-update status (skip while an update is
+   * available / downloading / downloaded-pending-install).
+   */
+  clearApkCache: () => Promise<void>;
+}
+
+export type IElectronUpdateListeners = {
+  onProgressUpdate?: (
+    callback: (params: IUpdateProgressUpdate) => void,
+  ) => IDesktopEventUnSubscribe | undefined;
+  onDownloaded?: (
+    callback: (params: IUpdateDownloadedEvent) => void,
+  ) => IDesktopEventUnSubscribe | undefined;
+  onUpdateError?: (
+    callback: (params: { message: string }) => void,
+  ) => IDesktopEventUnSubscribe | undefined;
+  onDownloadedFileEvent?: (
+    callback: (fileUrl: string) => void,
+  ) => IDesktopEventUnSubscribe | undefined;
+};
+
+export type IDownloadBundle = (
+  params: IDownloadPackageParams,
+) => Promise<IUpdateDownloadedEvent>;
+
+export type IBundleUpdateDownloadedEvent = {
+  downloadedFile?: string;
+  latestVersion?: string;
+  downloadUrl?: string;
+};
+
+export type IVerifyBundle = (params: IUpdateDownloadedEvent) => Promise<void>;
+export type IVerifyBundleASC = (
+  params: IUpdateDownloadedEvent,
+) => Promise<void>;
+export type IDownloadBundleASC = (
+  params: IUpdateDownloadedEvent,
+) => Promise<void>;
+export type IInstallBundle = (params: IUpdateDownloadedEvent) => Promise<void>;
+export type IClearBundle = () => Promise<void>;
+
+export type ITestDeleteJsBundle = (
+  appVersion: string,
+  bundleVersion: string,
+) => Promise<{ success: boolean; message: string }>;
+export type ITestDeleteJsRuntimeDir = (
+  appVersion: string,
+  bundleVersion: string,
+) => Promise<{ success: boolean; message: string }>;
+export type ITestDeleteMetadataJson = (
+  appVersion: string,
+  bundleVersion: string,
+) => Promise<{ success: boolean; message: string }>;
+export type ITestWriteEmptyMetadataJson = (
+  appVersion: string,
+  bundleVersion: string,
+) => Promise<{ success: boolean; message: string }>;
+
+export interface IJSBundle {
+  appVersion: string;
+  bundleVersion: string;
+  signature: string;
+}
+
+export interface IBundleUpdate {
+  downloadBundle: IDownloadBundle;
+  verifyBundle: IVerifyBundle;
+  verifyBundleASC: IVerifyBundleASC;
+  downloadBundleASC: IDownloadBundleASC;
+  installBundle: IInstallBundle;
+  clearBundle: IClearBundle;
+  clearDownload: () => Promise<void>;
+  resetToBuiltInBundle: () => Promise<void>;
+  /**
+   * Restart the app. On native this routes through
+   * `BackgroundThread.restart(mode=all, reason='ota.restart')`; on desktop it
+   * calls `app.relaunch`.
+   */
+  restart: () => void;
+  isSkipGpgVerificationAllowed: () => Promise<boolean>;
+  /**
+   * Delete every OTA bundle artifact (extracted dir, download staging,
+   * signature asc, stale fallback entries) whose appVersion differs from
+   * the running native binary version. The native / desktop implementation
+   * is self-contained: it computes the keep-set from the binary version and
+   * hard-refuses to delete the current appVersion (and never the active
+   * currentBundleVersion). Returns the count of deleted version directories.
+   * Missing files are tolerated (never throws).
+   */
+  pruneStaleAppVersionBundles: () => Promise<number>;
+  clearAllJSBundleData: () => Promise<{ success: boolean; message: string }>;
+  getFallbackBundles: () => Promise<IJSBundle[]>;
+  switchBundle: (params: IJSBundle) => Promise<void>;
+  isBundleExists: (
+    appVersion: string,
+    bundleVersion: string,
+  ) => Promise<boolean>;
+  verifyExtractedBundle: (
+    appVersion: string,
+    bundleVersion: string,
+  ) => Promise<void>;
+  listLocalBundles: () => Promise<
+    { appVersion: string; bundleVersion: string }[]
+  >;
+  testVerification: () => Promise<boolean>;
+  testSkipVerification: () => Promise<boolean>;
+  testDeleteJsBundle: ITestDeleteJsBundle;
+  testDeleteJsRuntimeDir: ITestDeleteJsRuntimeDir;
+  testDeleteMetadataJson: ITestDeleteMetadataJson;
+  testWriteEmptyMetadataJson: ITestWriteEmptyMetadataJson;
+  getWebEmbedPathAsync: () => Promise<string>;
+  getWebEmbedPath: () => string;
+  getNativeAppVersion: () => Promise<string>;
+  getSha256FromFilePath: (filePath: string) => Promise<string>;
+  getNativeBuildNumber: () => Promise<string>;
+  getBuiltinBundleVersion: () => Promise<string>;
+  getJsBundlePath: () => Promise<string>;
+  getBackgroundJsBundlePath: () => Promise<string>;
+}

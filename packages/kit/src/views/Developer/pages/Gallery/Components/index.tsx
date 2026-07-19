@@ -1,0 +1,98 @@
+import { useState } from 'react';
+
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useNavigation } from '@react-navigation/native';
+import natsort from 'natsort';
+
+import {
+  Input,
+  ListView,
+  Page,
+  View,
+  useScrollContentTabBarOffset,
+} from '@onekeyhq/components';
+import { ListItem } from '@onekeyhq/kit/src/components/ListItem';
+import { useGalleryPersistAtom } from '@onekeyhq/kit-bg/src/states/jotai/atoms';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
+import { EGalleryRoutes } from '@onekeyhq/shared/src/routes';
+
+if (platformEnv.isDev && platformEnv.isNative) {
+  globalThis.__CURRENT_FILE_PATH__ = '';
+}
+
+const Index = () => {
+  const [gallery, setGallery] = useGalleryPersistAtom();
+  const { galleryLastRoute } = gallery;
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const navigation = useNavigation();
+  const filteredComponents = Object.values(EGalleryRoutes)
+    .filter((item) => item.startsWith('component'))
+    .filter((item) => item.toLowerCase().includes(searchQuery.toLowerCase()))
+    .toSorted((a, b) => natsort({ insensitive: true })(a, b));
+
+  if (galleryLastRoute) {
+    filteredComponents.unshift(galleryLastRoute);
+  }
+
+  const tabBarHeight = useScrollContentTabBarOffset();
+  const headerHeight = useHeaderHeight();
+  let topPadding: number | '$10' | undefined;
+  if (platformEnv.isNativeIOS26Plus) {
+    topPadding = headerHeight;
+  } else if (platformEnv.isNativeIOS) {
+    topPadding = '$10';
+  }
+  return (
+    <Page>
+      <Page.Body pt={topPadding}>
+        <View
+          style={{
+            width: '90%',
+            maxWidth: 640,
+            alignSelf: 'center',
+          }}
+        >
+          <Input
+            placeholder="Search components..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        <ListView
+          estimatedItemSize="$11"
+          flex={1}
+          contentContainerStyle={{
+            py: 20,
+            pb: tabBarHeight,
+          }}
+          data={filteredComponents}
+          renderItem={({ item }) => (
+            <ListItem
+              style={{ width: '90%', maxWidth: 640, alignSelf: 'center' }}
+              key={item.replace('component-', '')}
+              drillIn
+              onPress={() => {
+                // @ts-expect-error
+                navigation.navigate(item);
+
+                setGallery((v) => ({
+                  ...v,
+                  galleryLastRoute: item,
+                }));
+              }}
+              title={
+                (galleryLastRoute === item ? '📌 ' : '') +
+                item.replace('component-', '').charAt(0).toUpperCase() +
+                item.replace('component-', '').substring(1)
+              }
+            />
+          )}
+          keyExtractor={(_, index) => index.toString()}
+        />
+      </Page.Body>
+    </Page>
+  );
+};
+
+export default Index;

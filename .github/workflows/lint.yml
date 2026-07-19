@@ -1,0 +1,92 @@
+name: 01-lint
+
+on:
+  pull_request:
+    branches:
+      - onekey
+      - x
+      - hotfix/*
+      - release/*
+  push:
+    branches:
+      - onekey
+      - x
+
+# Cancel a currently running workflow from the same PR/branch/tag
+# when a new workflow is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  YARN_ENABLE_GLOBAL_CACHE: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@onekeyhq'
+
+      - name: Write lint AI prompt
+        run: |
+          mkdir -p ci-ai
+          node .github/scripts/ciFailureIssue.js prompt lint > ci-ai/lint-ai-prompt.md || \
+            echo "AI prompt generation failed; inspect the failed step log and lint-output.log." > ci-ai/lint-ai-prompt.md
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=${{ github.workspace }}/.yarn" >> "$GITHUB_OUTPUT"
+
+      - name: Install Dependency
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_OPTIONS: '--max_old_space_size=4096'
+        run: |
+          yarn install --immutable
+
+      - name: Run lint
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+        run: |
+          mkdir -p ci-ai
+          set +e
+          yarn lint 2>&1 | tee ci-ai/lint-output.log
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
+
+      - name: Upload lint AI diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-ai-lint-diagnostics
+          path: |
+            ci-ai/lint-ai-prompt.md
+            ci-ai/lint-output.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Explain lint failure diagnostics
+        if: failure()
+        run: |
+          {
+            echo "### CI diagnostics"
+            echo "- Download artifact: \`ci-ai-lint-diagnostics\`"
+            echo "- Open: \`lint-output.log\` and \`lint-ai-prompt.md\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=CI diagnostics::Download ci-ai-lint-diagnostics and inspect lint-output.log"

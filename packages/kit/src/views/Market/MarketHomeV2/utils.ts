@@ -1,0 +1,173 @@
+// Shared utility functions for MarketHomeV2 components
+
+import type { IMarketCategoryItem } from './types';
+
+const SPOT_CATEGORIES_WITH_FULL_STATS = new Set(['trending', 'x_mentioned']);
+
+export const COMPACT_SPOT_HIDDEN_DESKTOP_COLUMNS = [
+  'transactions',
+  'uniqueTraders',
+  'holders',
+  'tokenAge',
+] as const;
+
+/**
+ * Validate liquidity input to only allow numbers and k/m/b/t/K/M/B/T characters
+ * Unit letters can only appear at the end and only one unit is allowed
+ * @param value - Input string to validate
+ * @returns True if valid, false otherwise
+ */
+export const validateLiquidityInput = (value: string): boolean => {
+  // Pattern: numbers followed by optional single unit at the end
+  const validPattern = /^[0-9]*[kmbtKMBT]?$/;
+  return validPattern.test(value);
+};
+
+/**
+ * Parse a string value to number, supporting K/k (thousands), M/m (millions), B/b (billions), T/t (trillions) suffixes
+ * Unit letters can only appear at the end and only one unit is allowed
+ * @param value - String value like "10K", "5M", "2B", "1T", "1000"
+ * @returns Parsed numeric value, or 0 when the input is invalid
+ */
+export const parseValueToNumber = (value: string): number => {
+  if (!value || value.trim() === '') {
+    return 0;
+  }
+
+  const trimmedValue = value.trim();
+
+  // Check if last character is a unit
+  const lastChar = trimmedValue.slice(-1).toLowerCase();
+  const isUnit = ['k', 'm', 'b', 't'].includes(lastChar);
+
+  if (isUnit) {
+    // Extract number part (everything except the last character)
+    const numberPart = trimmedValue.slice(0, -1);
+
+    if (!numberPart || numberPart === '') {
+      return 0;
+    }
+
+    const numValue = Number(numberPart);
+    if (!Number.isFinite(numValue)) {
+      return 0;
+    }
+
+    switch (lastChar) {
+      case 't':
+        return numValue * 1_000_000_000_000; // trillion
+      case 'b':
+        return numValue * 1_000_000_000; // billion
+      case 'm':
+        return numValue * 1_000_000; // million
+      case 'k':
+        return numValue * 1000; // thousand
+      default:
+        return numValue;
+    }
+  } else {
+    // No unit, just parse as number
+    const numValue = Number(trimmedValue);
+    return Number.isFinite(numValue) ? numValue : 0;
+  }
+};
+
+/**
+ * Format liquidity filter values for display
+ * @param filter - Liquidity filter object with min and max values
+ * @param liquidityText - Translated liquidity text
+ * @returns Formatted string for button display
+ */
+export const formatLiquidityFilterDisplay = (
+  filter?: {
+    min?: string;
+    max?: string;
+  },
+  liquidityText = 'Liquidity',
+): string => {
+  if (!filter || (!filter.min && !filter.max)) {
+    return liquidityText;
+  }
+
+  const { min, max } = filter;
+
+  // Clean up empty strings
+  const cleanMin = min?.trim();
+  const cleanMax = max?.trim();
+
+  if (cleanMin && cleanMax) {
+    return `${liquidityText}: ${cleanMin} - ${cleanMax}`;
+  }
+
+  if (cleanMin && !cleanMax) {
+    return `${liquidityText}: ≥ ${cleanMin}`;
+  }
+
+  if (!cleanMin && cleanMax) {
+    return `${liquidityText}: ≤ ${cleanMax}`;
+  }
+
+  return liquidityText;
+};
+
+/**
+ * Validate if the liquidity minimum value does not exceed maximum allowed (1t = 1 trillion)
+ * @param value - String value to validate
+ * @returns True if value is <= 1t or empty, false otherwise
+ */
+export const validateMaximumMinLiquidity = (value: string): boolean => {
+  if (!value || value.trim() === '') {
+    return true; // Empty values are allowed
+  }
+
+  const numValue = parseValueToNumber(value.trim());
+  const maximumMinValue = 1_000_000_000_000; // 1 trillion
+
+  return numValue <= maximumMinValue;
+};
+
+/**
+ * Spot categories backed by per-token OKX detail APIs only expose a compact
+ * metric set, so desktop list pages should hide the extended stats columns to
+ * match watchlist behavior.
+ */
+export const shouldHideSpotExtendedStats = (
+  selectedCategory?: string,
+): boolean => {
+  const normalizedCategory = selectedCategory || 'trending';
+  return !SPOT_CATEGORIES_WITH_FULL_STATS.has(normalizedCategory);
+};
+
+export const isMarketStockCategory = (
+  category?: Pick<IMarketCategoryItem, 'id' | 'name' | 'isStockCategory'>,
+): boolean => {
+  if (!category) {
+    return false;
+  }
+
+  if (category.isStockCategory) {
+    return true;
+  }
+
+  const normalizedId = category.id.trim().toLowerCase();
+  const normalizedName = category.name.trim().toLowerCase();
+
+  return (
+    normalizedId.includes('stock') ||
+    normalizedName.includes('stock') ||
+    normalizedName.includes('股票')
+  );
+};
+
+export const isMarketStockCategoryById = (
+  categories: IMarketCategoryItem[] | undefined,
+  categoryId: string | undefined,
+): boolean => {
+  if (!categoryId || !categories?.length) {
+    return false;
+  }
+
+  return categories.some(
+    (category) => category.id === categoryId && isMarketStockCategory(category),
+  );
+};

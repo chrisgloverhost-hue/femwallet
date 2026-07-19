@@ -1,0 +1,2 @@
+- [Replit package-firewall + Yarn Berry](replit-yarn-package-firewall.md) — HTTP proxy needs `unsafeHttpWhitelist`; CVE/malware-blocked versions need `resolutions` overrides, not npm registry swaps.
+- [OneKey inpage-providers-hub malware flag](onekey-inpage-providers-hub-flag.md) — versions 2.2.40–2.2.73 of OneKey's own package flagged as crypto-hijack malware by Socket; ≤2.2.30 clean. Needs real investigation, not just a local pin.
