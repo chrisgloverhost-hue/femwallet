@@ -16,6 +16,10 @@ the **web** target for the preview pane.
   own defaults). Fill in real values there (or via Replit's secrets tooling)
   if a feature needs a specific third-party API key.
 
+## Runtime requirements
+- **Node.js 22** is required (`engines: { node: ">=22" }` in `package.json`). The Replit environment is configured to use Node.js 22.
+- **Yarn 4.12.0** (Berry) — the binary is at `.yarn/releases/yarn-4.12.0.cjs`. Downloaded via `curl` from `repo.yarnpkg.com` on first setup.
+
 ## Environment-specific workarounds applied to get `yarn install` working
 Replit's environment routes package downloads through an internal proxy
 (`package-firewall.replit.local`) that (a) is plain HTTP, which Yarn Berry
