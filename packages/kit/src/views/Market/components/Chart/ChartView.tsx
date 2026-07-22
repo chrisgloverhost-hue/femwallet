@@ -19,6 +19,7 @@ interface IChartViewProps {
   onHover: IOnHoverFunction;
   height: number;
   isFetching: boolean;
+  pulseLastPoint?: boolean;
 }
 
 const ChartView: FC<IChartViewProps> = ({
@@ -26,6 +27,7 @@ const ChartView: FC<IChartViewProps> = ({
   onHover,
   height,
   isFetching,
+  pulseLastPoint,
 }) => {
   const lineColor = '#33C641';
   const topColor = '#00B81233';
@@ -40,6 +42,7 @@ const ChartView: FC<IChartViewProps> = ({
       topColor={topColor}
       bottomColor={bottomColor}
       onHover={onHover}
+      pulseLastPoint={pulseLastPoint}
     />
   );
 };

@@ -1599,8 +1599,19 @@ class AccountSelectorActions extends ContextJotaiActionsBase {
             step: EFinalizeWalletSetupSteps.GeneratingAccounts,
           });
 
+          // Race the account-generation work against a 25-second safety timeout
+          // so a slow multi-network derivation (many chains, slow device) never
+          // strands the user on the loading screen indefinitely. The wallet is
+          // already persisted; any missing chain accounts are created on demand.
           await Promise.all([
-            generatingAccountsFn({ wallet, indexedAccount, hidden }),
+            Promise.race([
+              generatingAccountsFn({ wallet, indexedAccount, hidden }),
+              timerUtils.wait(25000).then(() => {
+                defaultLogger.app.error.log(
+                  'withFinalizeWalletSetupStep: generatingAccountsFn timed out after 25s, proceeding',
+                );
+              }),
+            ]),
             timerUtils.wait(1000),
           ]);
         }

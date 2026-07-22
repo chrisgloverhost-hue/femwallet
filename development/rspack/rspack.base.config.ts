@@ -116,7 +116,7 @@ class BuildDoneNotifyPlugin implements RspackPluginInstance {
       if (IS_EAS_BUILD) {
         exit(0);
       } else {
-        const msg = `OneKey Build at ${new Date().toLocaleTimeString()}, completed in ${
+        const msg = `FEM Wallet Build at ${new Date().toLocaleTimeString()}, completed in ${
           ((stats.endTime ?? 0) - (stats.startTime ?? 0)) / 1000
         }s`;
         setTimeout(() => {

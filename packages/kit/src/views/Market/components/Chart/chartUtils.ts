@@ -38,6 +38,7 @@ export interface IChartViewAdapterProps extends IChartViewProps {
   lineColor: string;
   topColor: string;
   bottomColor: string;
+  pulseLastPoint?: boolean;
 }
 
 export interface IOnekeyChartApi extends IChartApi {

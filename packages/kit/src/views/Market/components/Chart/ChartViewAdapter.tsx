@@ -1,12 +1,14 @@
 import type { FC } from 'react';
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
-import { useTheme } from '@onekeyhq/components';
+import { Stack, useTheme } from '@onekeyhq/components';
 import { createLazySdkLoader } from '@onekeyhq/shared/src/utils/lazySdkLoader';
 
+import { LightweightChartPulseDot } from '../../../../components/LightweightChart/LightweightChartPulseDot';
 import { createChartDom, updateChartDom } from './chartUtils';
 
 import type { IChartViewAdapterProps, IOnekeyChartApi } from './chartUtils';
+import type { UTCTimestamp } from 'lightweight-charts';
 
 const getChartLib = createLazySdkLoader(() => import('lightweight-charts'));
 
@@ -17,6 +19,7 @@ const ChartViewAdapter: FC<IChartViewAdapterProps> = ({
   topColor,
   bottomColor,
   height,
+  pulseLastPoint,
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   // Per-instance chart handle. The chart is created asynchronously (lazy lib
@@ -29,6 +32,12 @@ const ChartViewAdapter: FC<IChartViewAdapterProps> = ({
   latestPropsRef.current = { data, lineColor, topColor, bottomColor };
   const theme = useTheme();
   const textSubduedColor = theme.textSubdued.val;
+
+  // Pixel-position of the last data point for the live pulse dot.
+  const [lastPointPos, setLastPointPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) {
@@ -79,9 +88,40 @@ const ChartViewAdapter: FC<IChartViewAdapterProps> = ({
       lineColor,
       data,
     });
-  }, [bottomColor, topColor, data, lineColor]);
 
-  return <div style={{ width: '100%', height }} ref={chartContainerRef} />;
+    if (!pulseLastPoint || !data?.length) {
+      setLastPointPos(null);
+      return;
+    }
+
+    // Defer coordinate conversion to the next animation frame so lightweight-
+    // charts has committed the new data before we query pixel positions.
+    requestAnimationFrame(() => {
+      const series = chartRef.current?._onekey_series;
+      if (!series || !chartRef.current || !data.length) return;
+      const lastPt = data[data.length - 1] as [UTCTimestamp, number];
+      const x = chartRef.current.timeScale().timeToCoordinate(lastPt[0]);
+      const y = series.priceToCoordinate(lastPt[1]);
+      if (x !== null && y !== null && x > 0 && y > 0) {
+        setLastPointPos({ x, y });
+      } else {
+        setLastPointPos(null);
+      }
+    });
+  }, [bottomColor, topColor, data, lineColor, pulseLastPoint]);
+
+  return (
+    <Stack position="relative" width="100%" height={height}>
+      <div style={{ width: '100%', height }} ref={chartContainerRef} />
+      {pulseLastPoint && lastPointPos ? (
+        <LightweightChartPulseDot
+          x={lastPointPos.x}
+          y={lastPointPos.y}
+          color={lineColor ?? '#33C641'}
+        />
+      ) : null}
+    </Stack>
+  );
 };
 ChartViewAdapter.displayName = 'ChartViewAdapter';
-export default ChartViewAdapter;
+export default memo(ChartViewAdapter);

@@ -236,7 +236,7 @@ function getCurrentWebVersion() {
 function logCurrentWebVersionInfo() {
   const versionInfo = getCurrentWebVersionInfo();
   console.info(
-    `[OneKey Web] appVersion=${versionInfo.appVersion || 'unknown'} commitHash=${versionInfo.commitHash} buildNumber=${versionInfo.buildNumber} bundleVersion=${versionInfo.bundleVersion || 'unknown'} webVersion=${versionInfo.webVersion}`,
+    `[FEM Wallet] appVersion=${versionInfo.appVersion || 'unknown'} commitHash=${versionInfo.commitHash} buildNumber=${versionInfo.buildNumber} bundleVersion=${versionInfo.bundleVersion || 'unknown'} webVersion=${versionInfo.webVersion}`,
   );
 }
 

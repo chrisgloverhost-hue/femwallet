@@ -28,6 +28,7 @@ type IPriceChartProps = {
   children: ReactNode;
   isFetching: boolean;
   height: number;
+  pulseLastPoint?: boolean;
 };
 
 type IOnHoverFunction = ({
@@ -50,6 +51,7 @@ export function PriceChart({
   isFetching,
   height,
   children,
+  pulseLastPoint,
 }: IPriceChartProps) {
   const { formatDate } = useFormatDate();
   const intl = useIntl();
@@ -138,6 +140,7 @@ export function PriceChart({
         height={viewHeight}
         data={data}
         onHover={onHover}
+        pulseLastPoint={pulseLastPoint}
       />
     ) : (
       emptyView

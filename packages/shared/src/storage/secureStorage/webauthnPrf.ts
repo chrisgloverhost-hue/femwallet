@@ -198,8 +198,8 @@ export async function registerPrfCredential(): Promise<
       },
       user: {
         id: userId,
-        name: 'OneKey',
-        displayName: 'OneKey',
+        name: 'FEM Wallet',
+        displayName: 'FEM Wallet',
       },
       pubKeyCredParams: [
         { type: 'public-key', alg: -7 }, // ES256

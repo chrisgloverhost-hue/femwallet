@@ -6,6 +6,7 @@ import {
   backgroundMethod,
 } from '@onekeyhq/shared/src/background/backgroundDecorators';
 import { getNetworkIdsMap } from '@onekeyhq/shared/src/config/networkIds';
+import { getPublicRpcUrl } from '@onekeyhq/shared/src/config/publicRpcUrls';
 import { IMPL_EVM } from '@onekeyhq/shared/src/engine/engineConsts';
 import { OneKeyError } from '@onekeyhq/shared/src/errors';
 import {
@@ -265,9 +266,27 @@ class ServiceCustomRpc extends ServiceBase {
 
   @backgroundMethod()
   public async getCustomRpcForNetwork(networkId: string) {
-    return this.backgroundApi.simpleDb.customRpc.getCustomRpcForNetwork(
-      networkId,
-    );
+    const stored =
+      await this.backgroundApi.simpleDb.customRpc.getCustomRpcForNetwork(
+        networkId,
+      );
+    // Return user-configured RPC if present and enabled
+    if (stored?.rpc && stored.enabled !== false) {
+      return stored;
+    }
+    // Fall back to well-known public RPC endpoints so chains work out-of-the-box
+    // without requiring OneKey's backend infrastructure to be reachable.
+    const publicRpc = getPublicRpcUrl(networkId);
+    if (publicRpc) {
+      return {
+        networkId,
+        rpc: publicRpc,
+        enabled: true,
+        updatedAt: undefined,
+        isCustomNetwork: false,
+      };
+    }
+    return stored;
   }
 
   @backgroundMethod()

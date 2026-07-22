@@ -125,7 +125,12 @@ function NativeTokenPriceChart({
   return (
     <>
       <Stack px="$5" $gtMd={{ pr: '$5' }}>
-        <PriceChart height={height} isFetching={isLoading} data={points}>
+        <PriceChart
+        height={height}
+        isFetching={isLoading}
+        data={points}
+        pulseLastPoint={days === '1' && !isLoading}
+      >
           {gtMd && !isLoading ? (
             <SegmentControl
               value={days}

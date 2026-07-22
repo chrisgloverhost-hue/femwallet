@@ -7,7 +7,7 @@ type IPlatformIdentityEnv = {
   isWeb?: boolean;
 };
 
-export const TREZOR_THP_APP_NAME = 'OneKey Wallet';
+export const TREZOR_THP_APP_NAME = 'FEM Wallet';
 
 export function getTrezorThpHostName(
   env: IPlatformIdentityEnv = platformEnv,

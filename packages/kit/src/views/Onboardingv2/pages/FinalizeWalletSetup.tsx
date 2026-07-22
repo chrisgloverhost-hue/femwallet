@@ -1175,6 +1175,24 @@ function FinalizeWalletSetupPage({
                 </YStack>
               </YStack>
               <StepTextSwap text={stepText} />
+              {isReady ? (
+                <XStack
+                  alignItems="center"
+                  gap="$1.5"
+                  opacity={0.45}
+                  animation="slow"
+                  animateOnly={ANIMATE_ONLY_OPACITY}
+                  enterStyle={{ opacity: 0 }}
+                >
+                  <SizableText size="$bodySm" color="$textSubdued">
+                    Powered by
+                  </SizableText>
+                  <Icon name="OnekeyBrand" size="$4" color="$textSubdued" />
+                  <SizableText size="$bodySm" color="$textSubdued">
+                    OneKey
+                  </SizableText>
+                </XStack>
+              ) : null}
               {gtMd ? (
                 <YStack mt="$4" minHeight={48} {...enterWalletTransitionProps}>
                   {enterWalletButton}

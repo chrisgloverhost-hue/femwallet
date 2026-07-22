@@ -36,29 +36,17 @@ export function createDevelopmentConfig({
       client: {
         overlay: false,
       },
-      // setupMiddlewares: (middlewares, devServer) => {
-      //   if (!devServer.app) return middlewares;
-
-      //   // proxy all requests with x-onekey-dev-proxy header
-      //   devServer.app.use((request, response, next) => {
-      //     const target = request.headers['x-onekey-dev-proxy'];
-      //     if (target && typeof target === 'string') {
-      //       const proxyMiddleware: RequestHandler = createProxyMiddleware({
-      //         target,
-      //         changeOrigin: true,
-      //         ws: false,
-      //         logLevel: 'silent',
-      //       });
-      //       console.log(
-      //         `[X-OneKey-Dev-Proxy] ${request.method} ${request.originalUrl} -> ${target}`,
-      //       );
-      //       return proxyMiddleware(request, response, next);
-      //     }
-      //     next();
-      //   });
-
-      //   return middlewares;
-      // },
+      setupMiddlewares: (
+        middlewares: any[],
+        devServer: { app?: { get: (path: string, handler: any) => void } },
+      ) => {
+        // Health-check endpoint — NetworkReachabilityTracker polls this on
+        // web so the "You are offline" banner does not appear in dev/Replit.
+        devServer.app?.get('/wallet/v1/health', (_req: any, res: any) => {
+          res.status(200).json({ ok: true, env: 'dev' });
+        });
+        return middlewares;
+      },
     } as RspackOptions['devServer'],
     cache: true,
   };
