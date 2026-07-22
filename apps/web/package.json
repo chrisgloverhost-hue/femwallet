@@ -15,7 +15,8 @@
   "dependencies": {
     "@onekeyhq/components": "*",
     "@onekeyhq/kit": "*",
-    "@onekeyhq/shared": "*"
+    "@onekeyhq/shared": "*",
+    "firebase": "^12.16.0"
   },
   "devDependencies": {
     "@aaroon/workbox-rspack-plugin": "^1.0.1",

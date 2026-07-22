@@ -454,7 +454,15 @@ function GetStarted() {
         }}
         gap="$8"
       >
-        <Icon name="OnekeyTextIllus" color="$text" h={48} w={174} />
+        <SizableText
+          size="$heading2xl"
+          fontWeight="700"
+          color="$text"
+          letterSpacing={3}
+          textTransform="uppercase"
+        >
+          FEM WALLET
+        </SizableText>
         {platformEnv.isNative ? (
           <HeroSentenceNative
             prefix={heroPrefix}

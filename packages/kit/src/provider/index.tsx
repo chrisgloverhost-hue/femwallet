@@ -30,6 +30,7 @@ import { SystemLocaleTracker } from '../components/SystemLocaleTracker';
 
 import { Container } from './Container';
 import { ColdStartByNotification } from './Container/ColdStartByNotification';
+import { FemWalletProvider } from './FemWalletProvider';
 import { NetworkReachabilityTracker } from './Container/NetworkReachabilityTracker';
 import { KeyboardProvider } from './KeyboardProvider';
 import { SplashProvider } from './SplashProvider';
@@ -119,20 +120,22 @@ export function KitProvider(props: any = {}) {
     <SafeAreaProvider>
       <GlobalJotaiReady>
         <SupabaseAuthProvider>
-          <KeyboardProvider>
-            <GestureHandlerRootView style={flexStyle}>
-              <ThemeProvider>
-                <NetworkReachabilityTracker />
-                <SplashProvider>
-                  <Container />
-                </SplashProvider>
-                <KitProviderLazyContentBeforeLocale />
-                <SystemLocaleTracker />
-                <KitProviderLazyContentAfterLocale />
-                <BackgroundNavigationRelay />
-              </ThemeProvider>
-            </GestureHandlerRootView>
-          </KeyboardProvider>
+          <FemWalletProvider>
+            <KeyboardProvider>
+              <GestureHandlerRootView style={flexStyle}>
+                <ThemeProvider>
+                  <NetworkReachabilityTracker />
+                  <SplashProvider>
+                    <Container />
+                  </SplashProvider>
+                  <KitProviderLazyContentBeforeLocale />
+                  <SystemLocaleTracker />
+                  <KitProviderLazyContentAfterLocale />
+                  <BackgroundNavigationRelay />
+                </ThemeProvider>
+              </GestureHandlerRootView>
+            </KeyboardProvider>
+          </FemWalletProvider>
         </SupabaseAuthProvider>
       </GlobalJotaiReady>
     </SafeAreaProvider>
