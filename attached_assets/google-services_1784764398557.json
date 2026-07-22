@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "17251022104",
+    "project_id": "fem-wallet-6a6e3",
+    "storage_bucket": "fem-wallet-6a6e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17251022104:android:84e3519f44c9cc73e81a6d",
+        "android_client_info": {
+          "package_name": "Com.company.femwallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSeASTXwK7aA0QzWAnEa0ss2jFQOYAIYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
