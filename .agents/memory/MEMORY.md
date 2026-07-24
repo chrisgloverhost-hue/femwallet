@@ -2,3 +2,5 @@
 - [OneKey inpage-providers-hub malware flag](onekey-inpage-providers-hub-flag.md) — versions 2.2.40–2.2.73 of OneKey's own package flagged as crypto-hijack malware by Socket; ≤2.2.30 clean. Needs real investigation, not just a local pin.
 - [Offline banner fix — web connectivity check](offline-banner-fix.md) — banner fires when health check polls unreachable OneKey backend; fix: local-origin URL on web + dev-server health endpoint.
 - [Public RPC fallback for chains](public-rpc-fallback.md) — `ServiceCustomRpc.getCustomRpcForNetwork` falls back to `publicRpcUrls.ts` so chains work without OneKey's backend.
+- [Yarn binary restore](yarn-binary-restore.md) — .yarn/releases/yarn-4.12.0.cjs missing after clone; curl from repo.yarnpkg.com then `yarn install --network-timeout 30000` (~1.5min from cache).
+- [FEM Firebase layer](fem-firebase-layer.md) — Firebase Auth + Firestore hybrid wallet layer in packages/shared/src/firebase/; OneKey backend kept 100% unchanged.

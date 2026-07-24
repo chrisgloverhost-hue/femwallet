@@ -1,9 +1,9 @@
-// FEM WALLET — Firebase Web SDK initialisation
-// Config values come from env vars so they can be set in Replit Secrets.
-// projectId / storageBucket / messagingSenderId are non-secret; only apiKey
-// and appId should go into Replit Secrets (FIREBASE_WEB_API_KEY / FIREBASE_WEB_APP_ID).
+// FEM WALLET — Firebase initialisation
+// Project: fem-wallet-6a6e3
+// All non-secret values are hardcoded; apiKey uses env var with fallback.
 
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -15,12 +15,18 @@ const firebaseConfig = {
   storageBucket: 'fem-wallet-6a6e3.firebasestorage.app',
   messagingSenderId: '17251022104',
   appId:
-    (typeof process !== 'undefined' && process.env.FIREBASE_WEB_APP_ID) || '',
+    (typeof process !== 'undefined' && process.env.FIREBASE_WEB_APP_ID) ||
+    '1:17251022104:web:fem-wallet',
 };
 
 // Guard against double-initialisation (hot-reload / React Strict Mode)
-const femFirebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let femFirebaseApp: FirebaseApp;
+if (getApps().length === 0) {
+  femFirebaseApp = initializeApp(firebaseConfig);
+} else {
+  femFirebaseApp = getApps()[0];
+}
 
 export const femFirestore = getFirestore(femFirebaseApp);
+export const femAuth = getAuth(femFirebaseApp);
 export default femFirebaseApp;

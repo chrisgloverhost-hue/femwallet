@@ -1,4 +1,49 @@
-# FEM WALLET — Complete Backend Feature Audit & Build Plan
+# FEM WALLET — Backend Architecture
+
+## Decision: Hybrid Backend Model
+
+**OneKey backend is used as-is** — it provides all blockchain infrastructure:
+RPC proxying, portfolio data, market prices, swaps, DeFi, NFTs, gas estimation,
+chainlists, firmware updates, and more. FEM Wallet does not replicate any of this.
+
+**Firebase is FEM's own layer on top** — it handles:
+- User identity (Google / Apple sign-in via Firebase Auth)
+- User profiles, linked wallet addresses, preferences (Firestore)
+- Hybrid custodial wallet tracking (deposits/withdrawals FEM controls)
+- Push notifications (FCM)
+- Market data fallback (CoinGecko public API — no key required)
+
+**Hybrid wallet model:**
+- Non-custodial side → user's private key stays on their device (unchanged OneKey flow)
+- Custodial side → FEM controls a wallet address per user; deposits/withdrawals tracked in Firestore
+
+### Firebase Files (already in codebase)
+| File | Purpose |
+|---|---|
+| `packages/shared/src/firebase/femWalletFirebase.ts` | Firebase app init (Auth + Firestore) |
+| `packages/shared/src/firebase/femWalletAuth.ts` | Google / Apple / email sign-in |
+| `packages/shared/src/firebase/femWalletUserService.ts` | User profiles, linked addresses, watchlist |
+| `packages/shared/src/firebase/femWalletHybrid.ts` | Custodial deposit/withdrawal recording |
+| `packages/shared/src/firebase/femWalletMarket.ts` | CoinGecko public API fallback |
+| `packages/shared/src/firebase/femWalletSaveService.ts` | Wallet metadata save on create/import |
+| `packages/shared/src/firebase/index.ts` | Barrel export |
+
+### Firestore Collections
+| Collection | What's stored |
+|---|---|
+| `fem_users` | Profile, linked addresses, custodial addresses, preferences, watchlist |
+| `fem_wallets` | Wallet metadata (type, name, public address — no keys) |
+| `fem_custodial_deposits` | Deposits into FEM-controlled addresses |
+| `fem_custodial_withdrawals` | Withdrawal requests from FEM-controlled addresses |
+
+---
+
+> The rest of this document is the complete endpoint audit of OneKey's backend
+> for reference — all of these endpoints continue to work for FEM Wallet unchanged.
+
+---
+
+# Complete OneKey Backend Feature Audit
 
 > Full reverse-engineering of every OneKey backend endpoint, service, and infrastructure component.  
 > Firebase feasibility is assessed for each area.
